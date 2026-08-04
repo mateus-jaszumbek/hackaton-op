@@ -1,10 +1,9 @@
 import { Steps } from './Steps.jsx'
 import { ExceptionNote } from './ExceptionNote.jsx'
-import { SourceChips } from './SourceChips.jsx'
 import { MessageActions } from './MessageActions.jsx'
 import styles from './BotMessage.module.css'
 
-export function BotMessage({ answer, shown, done, onSelectSource }) {
+export function BotMessage({ answer, shown, done }) {
   const text = done ? answer.text : answer.text.slice(0, shown)
 
   return (
@@ -19,7 +18,6 @@ export function BotMessage({ answer, shown, done, onSelectSource }) {
           {done && <Steps steps={answer.steps} />}
           {done && <ExceptionNote note={answer.note} />}
         </div>
-        {done && <SourceChips sources={answer.sources} onSelect={onSelectSource} />}
         {done && <MessageActions text={answer.text} />}
       </div>
     </div>

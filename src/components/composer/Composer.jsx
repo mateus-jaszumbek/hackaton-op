@@ -1,8 +1,7 @@
 import { useRef, useState } from 'react'
-import { ArrowUp, Paperclip, SquarePlus } from 'lucide-react'
+import { ArrowUp } from 'lucide-react'
 import { useAutosize } from '../../hooks/useAutosize.js'
 import { MAX_CHARS } from '../../hooks/useChat.js'
-import { PaletteSwitcher } from './PaletteSwitcher.jsx'
 import styles from './Composer.module.css'
 
 export function Composer({ onSend }) {
@@ -51,16 +50,6 @@ export function Composer({ onSend }) {
             className={styles.textarea}
           />
           <div className={styles.toolbar}>
-            <div className={styles.tools}>
-              <button type="button" className={styles.toolBtn}>
-                <Paperclip size={14} />
-                Anexar print
-              </button>
-              <button type="button" className={styles.toolBtn}>
-                <SquarePlus size={14} />
-                Escolher módulo
-              </button>
-            </div>
             <div className={styles.sendRow}>
               <span className={styles.counter}>{counter}</span>
               <button
@@ -80,7 +69,6 @@ export function Composer({ onSend }) {
             Respostas citam o procedimento vigente. Alterações no sistema seguem a aprovação
             indicada.
           </div>
-          <PaletteSwitcher />
         </div>
       </div>
     </form>

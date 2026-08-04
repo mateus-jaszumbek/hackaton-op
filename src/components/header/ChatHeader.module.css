@@ -24,26 +24,6 @@
   white-space: nowrap;
 }
 
-.chip {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--sub);
-  border-radius: 999px;
-  padding: 6px 12px;
-  flex: none;
-}
-
-.chipIcon {
-  color: var(--muted);
-}
-
-.chipText {
-  font-size: 11px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
 .actions {
   display: flex;
   align-items: center;
@@ -73,26 +53,4 @@
   border-radius: 2px;
   background: var(--a1);
   display: block;
-}
-
-.textBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--muted);
-  transition: background 0.15s, color 0.15s;
-}
-
-.textBtn:hover {
-  background: var(--hov);
-  color: var(--ink);
-}
-
-.textBtn[data-active='true'] {
-  background: var(--sub);
-  color: var(--ink);
 }

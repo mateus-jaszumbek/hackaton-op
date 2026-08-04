@@ -5,7 +5,7 @@ import { BotMessage } from './BotMessage.jsx'
 import { Thinking } from './Thinking.jsx'
 import styles from './MessageList.module.css'
 
-export function MessageList({ msgs, shown, thinking, done, onSelectSource }) {
+export function MessageList({ msgs, shown, thinking, done }) {
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -24,12 +24,7 @@ export function MessageList({ msgs, shown, thinking, done, onSelectSource }) {
             </div>
           ) : (
             <div key={m.id} className={styles.rowBot}>
-              <BotMessage
-                answer={getAnswer(m.key)}
-                shown={shown}
-                done={done}
-                onSelectSource={onSelectSource}
-              />
+              <BotMessage answer={getAnswer(m.key)} shown={shown} done={done} />
             </div>
           ),
         )}
