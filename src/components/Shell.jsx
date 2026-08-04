@@ -1,26 +1,36 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sidebar } from './sidebar/Sidebar.jsx'
 import { ChatHeader } from './header/ChatHeader.jsx'
 import { EmptyState } from './chat/EmptyState.jsx'
 import { MessageList } from './chat/MessageList.jsx'
 import { Composer } from './composer/Composer.jsx'
 import { useChat } from '../hooks/useChat.js'
-import { matchKey } from '../services/chat.js'
+import { listConversations } from '../services/api.js'
 import styles from './Shell.module.css'
 
 export function Shell() {
   const chat = useChat()
   const [collapsed, setCollapsed] = useState(false)
-  const [selectedId, setSelectedId] = useState(null)
+  const [conversations, setConversations] = useState([])
 
-  function handleAsk(key, label, historyId = null) {
-    chat.ask(key, label)
-    setSelectedId(historyId)
+  function refreshConversations() {
+    listConversations()
+      .then(setConversations)
+      .catch(() => {})
   }
+
+  useEffect(refreshConversations, [])
+
+  useEffect(() => {
+    if (chat.phase === 'done') refreshConversations()
+  }, [chat.phase])
 
   function handleReset() {
     chat.reset()
-    setSelectedId(null)
+  }
+
+  function handleSelectHistory(item) {
+    chat.loadConversation(item.id, item.title)
   }
 
   return (
@@ -29,16 +39,16 @@ export function Shell() {
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((c) => !c)}
         onNew={handleReset}
-        activeKey={chat.key}
-        selectedId={selectedId}
-        onSelectHistory={(item) => handleAsk(item.key, item.title, item.id)}
+        conversations={conversations}
+        selectedId={chat.conversationId}
+        onSelectHistory={handleSelectHistory}
       />
       <main className={styles.main}>
         <ChatHeader title={chat.title} streaming={chat.streaming} onStop={chat.stop} />
         <div className={styles.body}>
           <div className={styles.chatCol}>
             {chat.isEmpty ? (
-              <EmptyState onSuggest={(key) => handleAsk(key)} />
+              <EmptyState onSuggest={(text) => chat.ask(text)} />
             ) : (
               <MessageList
                 msgs={chat.msgs}
@@ -47,12 +57,7 @@ export function Shell() {
                 done={chat.phase === 'done'}
               />
             )}
-            <Composer
-              onSend={(text) => {
-                const key = matchKey(text)
-                handleAsk(key, text)
-              }}
-            />
+            <Composer onSend={(text) => chat.ask(text)} />
           </div>
         </div>
       </main>

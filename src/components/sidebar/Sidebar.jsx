@@ -1,17 +1,40 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { PanelLeft, Plus, Search } from 'lucide-react'
-import { HISTORY } from '../../data/history.js'
 import { IconButton } from '../ui/IconButton.jsx'
 import { SearchBox } from './SearchBox.jsx'
 import { HistoryList } from './HistoryList.jsx'
 import { UserCard } from './UserCard.jsx'
 import styles from './Sidebar.module.css'
 
+const DAY_MS = 86400000
+
+function bucketLabel(timestamp) {
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  if (timestamp >= startOfToday) return 'Hoje'
+  if (timestamp >= startOfToday - 6 * DAY_MS) return 'Esta semana'
+  return 'Mais antigas'
+}
+
+function groupConversations(conversations, query) {
+  const q = query.trim().toLowerCase()
+  const buckets = new Map()
+  for (const c of conversations) {
+    if (q && !c.title.toLowerCase().includes(q)) continue
+    const label = bucketLabel(c.updatedAt)
+    if (!buckets.has(label)) buckets.set(label, [])
+    buckets.get(label).push(c)
+  }
+  return ['Hoje', 'Esta semana', 'Mais antigas']
+    .filter((label) => buckets.has(label))
+    .map((label) => ({ label, items: buckets.get(label) }))
+}
+
 export function Sidebar({
   collapsed,
   onToggleCollapse,
   onNew,
-  activeKey,
+  conversations,
   selectedId,
   onSelectHistory,
 }) {
@@ -26,13 +49,10 @@ export function Sidebar({
     }
   }, [collapsed, focusSearchPending])
 
-  const groups = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return HISTORY.map((g) => ({
-      label: g.group,
-      items: g.items.filter((i) => !q || i.title.toLowerCase().includes(q)),
-    })).filter((g) => g.items.length > 0)
-  }, [query])
+  const groups = useMemo(
+    () => groupConversations(conversations, query),
+    [conversations, query],
+  )
 
   function handleExpandForSearch() {
     setFocusSearchPending(true)
@@ -84,7 +104,6 @@ export function Sidebar({
         <HistoryList
           groups={groups}
           collapsed={collapsed}
-          activeKey={activeKey}
           selectedId={selectedId}
           onSelect={onSelectHistory}
         />

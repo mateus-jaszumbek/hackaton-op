@@ -1,6 +1,6 @@
 import styles from './HistoryList.module.css'
 
-export function HistoryList({ groups, collapsed, activeKey, selectedId, onSelect }) {
+export function HistoryList({ groups, collapsed, selectedId, onSelect }) {
   if (groups.length === 0) {
     if (collapsed) return null
     return <p className={styles.empty}>Nenhuma conversa</p>
@@ -10,7 +10,7 @@ export function HistoryList({ groups, collapsed, activeKey, selectedId, onSelect
     return (
       <div className={styles.railList}>
         {groups.flatMap((g) => g.items).map((item) => {
-          const active = selectedId === item.id && activeKey === item.key
+          const active = selectedId === item.id
           return (
             <button
               key={item.id}
@@ -35,7 +35,7 @@ export function HistoryList({ groups, collapsed, activeKey, selectedId, onSelect
         <div key={g.label} className={styles.group}>
           <div className={styles.label}>{g.label}</div>
           {g.items.map((item) => {
-            const active = selectedId === item.id && activeKey === item.key
+            const active = selectedId === item.id
             return (
               <button
                 key={item.id}

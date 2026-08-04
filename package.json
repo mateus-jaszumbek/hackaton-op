@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "npm --prefix server run dev",
+    "dev:all": "concurrently -n front,back -c blue,green \"npm run dev\" \"npm run dev:server\"",
+    "install:all": "npm install && npm install --prefix server",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"
@@ -19,6 +22,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "concurrently": "^10.0.4",
     "oxlint": "^1.75.0",
     "vite": "^8.2.0"
   }

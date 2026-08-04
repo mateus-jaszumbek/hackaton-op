@@ -27,7 +27,7 @@ export function EmptyState({ onSuggest }) {
               <button
                 key={s.key}
                 type="button"
-                onClick={() => onSuggest(s.key)}
+                onClick={() => onSuggest(s.text)}
                 className={styles.card}
               >
                 <div className={styles.cardTop}>

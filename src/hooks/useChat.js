@@ -1,8 +1,6 @@
 import { useEffect, useReducer } from 'react'
-import { getAnswer } from '../services/chat.js'
-import { SUGGESTIONS } from '../data/suggestions.js'
+import { getMessages, sendMessage } from '../services/api.js'
 
-const THINK_MS = 900
 const TICK_MS = 26
 const CHARS_PER_TICK = 3
 export const TITLE_MAX = 54
@@ -14,7 +12,7 @@ const initialState = {
   phase: 'idle',
   msgs: [],
   shown: 0,
-  key: null,
+  conversationId: null,
   title: 'Nova conversa',
 }
 
@@ -26,18 +24,30 @@ function reducer(state, action) {
   switch (action.type) {
     case 'ask':
       return {
+        ...state,
         phase: 'thinking',
-        msgs: [{ id: seq++, role: 'user', text: action.text }],
+        msgs: [...state.msgs, { id: seq++, role: 'user', text: action.text }],
         shown: 0,
-        key: action.key,
-        title: truncateTitle(action.text),
+        title: state.conversationId ? state.title : truncateTitle(action.text),
       }
     case 'reply':
       return {
         ...state,
         phase: 'streaming',
         shown: 0,
-        msgs: [...state.msgs, { id: seq++, role: 'bot', key: state.key }],
+        conversationId: action.conversationId,
+        title: action.title,
+        msgs: [
+          ...state.msgs,
+          { id: seq++, role: 'assistant', text: action.text, steps: action.steps, note: action.note },
+        ],
+      }
+    case 'error':
+      return {
+        ...state,
+        phase: 'done',
+        shown: action.text.length,
+        msgs: [...state.msgs, { id: seq++, role: 'assistant', text: action.text, steps: [], note: '' }],
       }
     case 'tick': {
       const next = state.shown + CHARS_PER_TICK
@@ -46,6 +56,14 @@ function reducer(state, action) {
     }
     case 'reveal':
       return { ...state, phase: 'done', shown: action.len }
+    case 'load':
+      return {
+        phase: 'done',
+        msgs: action.msgs,
+        shown: 0,
+        conversationId: action.conversationId,
+        title: action.title,
+      }
     case 'reset':
       return initialState
     default:
@@ -57,26 +75,37 @@ export function useChat() {
   const [st, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
-    if (st.phase !== 'thinking') return
-    const t = setTimeout(() => dispatch({ type: 'reply' }), THINK_MS)
-    return () => clearTimeout(t)
-  }, [st.phase])
-
-  useEffect(() => {
     if (st.phase !== 'streaming') return
-    const len = getAnswer(st.key).text.length
+    const len = st.msgs[st.msgs.length - 1].text.length
     const t = setInterval(() => dispatch({ type: 'tick', len }), TICK_MS)
     return () => clearInterval(t)
-  }, [st.phase, st.key])
+  }, [st.phase, st.msgs])
 
-  function ask(key, label) {
-    const text = label || SUGGESTIONS.find((s) => s.key === key).text
-    dispatch({ type: 'ask', key, text })
+  async function ask(text) {
+    dispatch({ type: 'ask', text })
+    try {
+      const data = await sendMessage({ conversationId: st.conversationId, text })
+      dispatch({
+        type: 'reply',
+        conversationId: data.conversationId,
+        title: data.title,
+        text: data.reply.text,
+        steps: data.reply.steps,
+        note: data.reply.note,
+      })
+    } catch (err) {
+      dispatch({ type: 'error', text: `Não consegui falar com o agente: ${err.message}` })
+    }
+  }
+
+  async function loadConversation(conversationId, title) {
+    const msgs = await getMessages(conversationId)
+    dispatch({ type: 'load', conversationId, title, msgs })
   }
 
   function stop() {
     if (st.phase !== 'streaming') return
-    dispatch({ type: 'reveal', len: getAnswer(st.key).text.length })
+    dispatch({ type: 'reveal', len: st.msgs[st.msgs.length - 1].text.length })
   }
 
   function reset() {
@@ -87,13 +116,14 @@ export function useChat() {
     phase: st.phase,
     msgs: st.msgs,
     shown: st.shown,
-    key: st.key,
+    conversationId: st.conversationId,
     title: st.title,
     isEmpty: st.msgs.length === 0,
     hasThread: st.msgs.length > 0,
     thinking: st.phase === 'thinking',
     streaming: st.phase === 'streaming',
     ask,
+    loadConversation,
     stop,
     reset,
   }

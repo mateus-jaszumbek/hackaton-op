@@ -15,8 +15,8 @@ export function BotMessage({ answer, shown, done }) {
             {text}
             {!done && <span className={styles.caret} aria-hidden="true" />}
           </div>
-          {done && <Steps steps={answer.steps} />}
-          {done && <ExceptionNote note={answer.note} />}
+          {done && answer.steps?.length > 0 && <Steps steps={answer.steps} />}
+          {done && answer.note && <ExceptionNote note={answer.note} />}
         </div>
         {done && <MessageActions text={answer.text} />}
       </div>
