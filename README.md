@@ -1,16 +1,29 @@
-# React + Vite
+# Agente Interno de Procedimentos
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Front-end (Vite + React) + backend (Express + SQLite) para o chat do agente interno. Sem
+autenticação — todo mundo usa o mesmo usuário fixo (`Teste hackaton`). Ver `server/README.md`
+para detalhes da API e do contrato esperado do webhook do n8n.
 
-Currently, two official plugins are available:
+## Rodando o projeto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Requisitos: Node 22+ (usa `node:sqlite`, nativo do runtime).
 
-## React Compiler
+```bash
+npm run install:all   # instala as dependências da raiz (front) e de /server (back) — só na primeira vez
+npm run dev:all       # sobe front + back juntos
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Front: `http://localhost:5173`
+- Back: `http://localhost:8787`
 
-## Expanding the Oxlint configuration
+Sem `N8N_WEBHOOK_URL` configurado em `server/.env` (crie a partir de `server/.env.example`), o
+agente responde um eco de stub — dá pra testar o fluxo completo antes de plugar o workflow do n8n.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Comandos individuais
+
+```bash
+npm run dev           # só o front
+npm run dev:server    # só o back
+npm run build          # build de produção do front
+npm run lint           # oxlint
+```
