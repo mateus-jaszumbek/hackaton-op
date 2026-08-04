@@ -22,4 +22,15 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
+
+  CREATE TABLE IF NOT EXISTS cases (
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT REFERENCES conversations(id),
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    priority TEXT NOT NULL CHECK (priority IN ('baixa', 'media', 'alta')),
+    status TEXT NOT NULL DEFAULT 'aberto',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
 `)

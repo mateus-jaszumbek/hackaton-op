@@ -1,4 +1,4 @@
-import { N8N_WEBHOOK_URL, CURRENT_USER } from '../config.js'
+import { N8N_WEBHOOK_URL, N8N_WEBHOOK_SECRET, CURRENT_USER } from '../config.js'
 
 export async function askAgent({ conversationId, text, history }) {
   if (!N8N_WEBHOOK_URL) {
@@ -11,7 +11,10 @@ export async function askAgent({ conversationId, text, history }) {
 
   const res = await fetch(N8N_WEBHOOK_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(N8N_WEBHOOK_SECRET ? { 'x-webhook-secret': N8N_WEBHOOK_SECRET } : {}),
+    },
     body: JSON.stringify({
       conversationId,
       message: text,
