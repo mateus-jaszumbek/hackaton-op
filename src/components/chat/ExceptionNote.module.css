@@ -1,0 +1,23 @@
+.box {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--a2);
+  margin-top: 2px;
+}
+
+.text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}

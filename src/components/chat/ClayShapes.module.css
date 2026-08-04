@@ -1,0 +1,40 @@
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  height: 84px;
+}
+
+.circle {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--a1);
+}
+
+.blob {
+  width: 92px;
+  height: 64px;
+  border-radius: 38% 62% 55% 45% / 50% 45% 55% 50%;
+  background: var(--a3);
+}
+
+.pill {
+  width: 124px;
+  height: 46px;
+  border-radius: 999px;
+  background: var(--a2);
+}
+
+.square {
+  width: 62px;
+  height: 62px;
+  border-radius: 22px 22px 22px 54px;
+  background: var(--sub);
+}
+
+@media (max-height: 700px) {
+  .row {
+    display: none;
+  }
+}

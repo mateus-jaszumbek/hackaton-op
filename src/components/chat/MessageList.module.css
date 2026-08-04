@@ -1,0 +1,25 @@
+.wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 32px var(--gutter) 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.col {
+  width: 100%;
+  max-width: var(--col);
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.rowUser {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rowBot {
+  display: flex;
+}

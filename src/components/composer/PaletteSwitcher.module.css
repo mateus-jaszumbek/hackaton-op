@@ -1,0 +1,22 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--dot);
+  transition: box-shadow 0.15s;
+}
+
+.dot[data-active='true'] {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--dot);
+}

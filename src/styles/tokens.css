@@ -1,0 +1,47 @@
+[data-pal='menta'] {
+  --bg: #e6f3f1;
+  --panel: #fafdfc;
+  --sub: #dcece9;
+  --ink: #1e3b38;
+  --muted: #6d918c;
+  --line: rgba(20, 70, 65, 0.12);
+  --hov: rgba(20, 70, 65, 0.05);
+  --a1: #33ac96;
+  --a2: #6b8ff0;
+  --a3: #ffcf6b;
+  --on-a1: #fff;
+  color-scheme: light;
+}
+
+[data-pal='escuro'] {
+  --bg: #1f1c2c;
+  --panel: #2b2740;
+  --sub: #353052;
+  --ink: #ece9f7;
+  --muted: #9d96c4;
+  --line: rgba(255, 255, 255, 0.09);
+  --hov: rgba(255, 255, 255, 0.05);
+  --a1: #8b7bf7;
+  --a2: #ff8fa8;
+  --a3: #6fd8c4;
+  --on-a1: #fff;
+  color-scheme: dark;
+}
+
+:root {
+  --sidebar: 272px;
+  --rail: 68px;
+  --src-panel: 340px;
+  --col: 720px;
+  --gutter: clamp(20px, 2.2vw, 32px);
+  --h1: clamp(28px, 2.6vw, 36px);
+
+  background: var(--bg);
+  color: var(--ink);
+}
+
+@media (max-width: 1400px) {
+  :root {
+    --src-panel: 320px;
+  }
+}

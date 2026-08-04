@@ -1,0 +1,14 @@
+.btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn:hover {
+  background: var(--hov);
+  color: var(--ink);
+}

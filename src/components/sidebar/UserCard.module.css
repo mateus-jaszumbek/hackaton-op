@@ -1,0 +1,42 @@
+.card {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card[data-collapsed='true'] {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--sub);
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role {
+  font-size: 10.5px;
+  color: var(--muted);
+}
