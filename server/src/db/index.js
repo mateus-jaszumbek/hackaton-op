@@ -1,6 +1,9 @@
 import { DatabaseSync } from 'node:sqlite'
+import { mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { DB_PATH } from '../config.js'
 
+mkdirSync(dirname(DB_PATH), { recursive: true })
 export const db = new DatabaseSync(DB_PATH)
 
 db.exec(`
