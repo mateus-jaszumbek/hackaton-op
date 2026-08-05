@@ -20,6 +20,8 @@ app.use('/api/chat', chatRouter)
 app.use('/api/cases', casesRouter)
 app.use('/api/webhook-auth', webhookAuthRouter)
 
-app.listen(PORT, () => {
-  console.log(`[server] rodando em http://localhost:${PORT}`)
+const HOST = '0.0.0.0'
+
+app.listen(PORT, HOST, () => {
+  console.log(`[server] rodando em http://${HOST}:${PORT}`)
 })
