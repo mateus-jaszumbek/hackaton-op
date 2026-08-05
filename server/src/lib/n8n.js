@@ -34,6 +34,21 @@ export async function askAgent({ conversationId, text, history }) {
     throw new Error(`n8n respondeu ${res.status} sem JSON válido no corpo (verifique o nó "Respond to Webhook" do workflow)`)
   }
 
+  return extractReply(data)
+}
+
+function extractReply(data) {
+  if (Array.isArray(data)) data = data[0] ?? {}
+
+  const openaiContent = data?.choices?.[0]?.message?.content
+  if (typeof openaiContent === 'string') {
+    try {
+      data = { ...data, ...JSON.parse(openaiContent) }
+    } catch {
+      // conteúdo do OpenAI não era JSON, mantém `data` como está
+    }
+  }
+
   return {
     text: data.replyText ?? data.text ?? data.reply ?? data.output ?? '',
     steps: data.steps ?? [],
