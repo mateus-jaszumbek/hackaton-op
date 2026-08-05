@@ -27,7 +27,13 @@ export async function askAgent({ conversationId, text, history }) {
     throw new Error(`n8n respondeu ${res.status}`)
   }
 
-  const data = await res.json()
+  let data
+  try {
+    data = await res.json()
+  } catch {
+    throw new Error(`n8n respondeu ${res.status} sem JSON válido no corpo (verifique o nó "Respond to Webhook" do workflow)`)
+  }
+
   return {
     text: data.text ?? data.reply ?? data.output ?? '',
     steps: data.steps ?? [],
