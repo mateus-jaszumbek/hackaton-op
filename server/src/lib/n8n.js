@@ -35,7 +35,7 @@ export async function askAgent({ conversationId, text, history }) {
   }
 
   return {
-    text: data.text ?? data.reply ?? data.output ?? '',
+    text: data.replyText ?? data.text ?? data.reply ?? data.output ?? '',
     steps: data.steps ?? [],
     note: data.note ?? '',
   }
