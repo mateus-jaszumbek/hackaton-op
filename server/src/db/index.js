@@ -36,20 +36,4 @@ db.exec(`
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
   );
-
-  CREATE TABLE IF NOT EXISTS equipment_rentals (
-    id TEXT PRIMARY KEY,
-    conversation_id TEXT REFERENCES conversations(id),
-    equipment_name TEXT NOT NULL,
-    total_value REAL NOT NULL,
-    start_date INTEGER NOT NULL,
-    end_date INTEGER NOT NULL,
-    contact_email TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'ativo' CHECK (status IN ('ativo', 'renovado', 'encerrado')),
-    reminder_sent_at INTEGER,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_equipment_end_date ON equipment_rentals(end_date);
 `)
