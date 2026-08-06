@@ -7,8 +7,8 @@ const insertConversation = db.prepare(
 )
 const touchConversation = db.prepare(`UPDATE conversations SET updated_at = ? WHERE id = ?`)
 const insertMessage = db.prepare(
-  `INSERT INTO messages (id, conversation_id, role, text, steps_json, note, created_at)
-   VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  `INSERT INTO messages (id, conversation_id, role, text, steps_json, note, source, created_at)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 )
 const selectConversation = db.prepare(`SELECT * FROM conversations WHERE id = ?`)
 const selectConversations = db.prepare(
@@ -46,12 +46,12 @@ export function listConversations() {
   }))
 }
 
-export function addMessage(conversationId, role, text, { steps = [], note = '' } = {}) {
+export function addMessage(conversationId, role, text, { steps = [], note = '', source = 'ia' } = {}) {
   const id = randomUUID()
   const now = Date.now()
-  insertMessage.run(id, conversationId, role, text, JSON.stringify(steps), note, now)
+  insertMessage.run(id, conversationId, role, text, JSON.stringify(steps), note, source, now)
   touchConversation.run(now, conversationId)
-  return { id, conversationId, role, text, steps, note, createdAt: now }
+  return { id, conversationId, role, text, steps, note, source, createdAt: now }
 }
 
 export function listMessages(conversationId) {
@@ -62,6 +62,7 @@ export function listMessages(conversationId) {
     text: m.text,
     steps: JSON.parse(m.steps_json),
     note: m.note,
+    source: m.source,
     createdAt: m.created_at,
   }))
 }

@@ -26,6 +26,7 @@ chatRouter.post('/', async (req, res) => {
     const saved = addMessage(conversation.id, 'assistant', reply.text, {
       steps: reply.steps,
       note: reply.note,
+      source: reply.source,
     })
 
     res.json({

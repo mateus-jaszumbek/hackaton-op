@@ -6,6 +6,7 @@ export async function askAgent({ conversationId, text, history }) {
       text: `(n8n não configurado ainda) Recebi: "${text}"`,
       steps: [],
       note: '',
+      source: 'ia',
     }
   }
 
@@ -53,5 +54,6 @@ function extractReply(data) {
     text: data.replyText ?? data.text ?? data.reply ?? data.output ?? '',
     steps: data.steps ?? [],
     note: data.note ?? '',
+    source: data.source === 'documentado' ? 'documentado' : 'ia',
   }
 }

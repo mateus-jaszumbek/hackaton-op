@@ -21,6 +21,7 @@ db.exec(`
     text TEXT NOT NULL,
     steps_json TEXT NOT NULL DEFAULT '[]',
     note TEXT NOT NULL DEFAULT '',
+    source TEXT NOT NULL DEFAULT 'ia',
     created_at INTEGER NOT NULL
   );
 
@@ -56,3 +57,10 @@ db.exec(`
     updated_at INTEGER NOT NULL
   );
 `)
+
+// Migração pra bancos criados antes da coluna existir (CREATE TABLE IF NOT EXISTS não altera tabelas já existentes)
+try {
+  db.exec(`ALTER TABLE messages ADD COLUMN source TEXT NOT NULL DEFAULT 'ia'`)
+} catch (err) {
+  if (!String(err.message).includes('duplicate column')) throw err
+}
