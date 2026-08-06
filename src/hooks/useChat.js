@@ -39,7 +39,14 @@ function reducer(state, action) {
         title: action.title,
         msgs: [
           ...state.msgs,
-          { id: seq++, role: 'assistant', text: action.text, steps: action.steps, note: action.note },
+          {
+            id: seq++,
+            role: 'assistant',
+            text: action.text,
+            steps: action.steps,
+            note: action.note,
+            source: action.source,
+          },
         ],
       }
     case 'error':
@@ -92,6 +99,7 @@ export function useChat() {
         text: data.reply.text,
         steps: data.reply.steps,
         note: data.reply.note,
+        source: data.reply.source,
       })
     } catch (err) {
       dispatch({ type: 'error', text: `Não consegui falar com o agente: ${err.message}` })

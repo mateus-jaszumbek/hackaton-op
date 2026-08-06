@@ -1,6 +1,7 @@
 import { Steps } from './Steps.jsx'
 import { ExceptionNote } from './ExceptionNote.jsx'
 import { MessageActions } from './MessageActions.jsx'
+import { SourceBadge } from './SourceBadge.jsx'
 import styles from './BotMessage.module.css'
 
 export function BotMessage({ answer, shown, done }) {
@@ -11,6 +12,7 @@ export function BotMessage({ answer, shown, done }) {
       <div className={styles.avatar} aria-hidden="true" />
       <div className={styles.col}>
         <div className={styles.bubble}>
+          {done && <SourceBadge source={answer.source} />}
           <div className={styles.text}>
             {text}
             {!done && <span className={styles.caret} aria-hidden="true" />}
