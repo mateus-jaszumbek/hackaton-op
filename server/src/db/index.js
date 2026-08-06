@@ -25,10 +25,14 @@ export async function ensureSchema() {
       steps_json TEXT NOT NULL DEFAULT '[]',
       note TEXT NOT NULL DEFAULT '',
       source TEXT NOT NULL DEFAULT 'ia',
+      pending_use_case_json TEXT,
+      use_case_saved BOOLEAN NOT NULL DEFAULT false,
       created_at BIGINT NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
+    ALTER TABLE messages ADD COLUMN IF NOT EXISTS pending_use_case_json TEXT;
+    ALTER TABLE messages ADD COLUMN IF NOT EXISTS use_case_saved BOOLEAN NOT NULL DEFAULT false;
 
     CREATE TABLE IF NOT EXISTS cases (
       id TEXT PRIMARY KEY,

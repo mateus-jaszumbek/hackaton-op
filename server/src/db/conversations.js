@@ -59,7 +59,11 @@ export async function listMessages(conversationId) {
   const { rows } = await db.query(`SELECT * FROM messages WHERE conversation_id = $1 ORDER BY created_at ASC`, [
     conversationId,
   ])
-  return rows.map((m) => ({
+  return rows.map(toMessageApi)
+}
+
+function toMessageApi(m) {
+  return {
     id: m.id,
     conversationId: m.conversation_id,
     role: m.role,
@@ -67,6 +71,32 @@ export async function listMessages(conversationId) {
     steps: JSON.parse(m.steps_json),
     note: m.note,
     source: m.source,
+    pendingUseCase: m.pending_use_case_json ? JSON.parse(m.pending_use_case_json) : null,
+    useCaseSaved: m.use_case_saved,
     createdAt: Number(m.created_at),
-  }))
+  }
+}
+
+export async function getMessage(id) {
+  const { rows } = await db.query(`SELECT * FROM messages WHERE id = $1`, [id])
+  return rows[0] ? toMessageApi(rows[0]) : null
+}
+
+export async function attachPendingUseCase(conversationId, pendingUseCase) {
+  const { rows } = await db.query(
+    `SELECT id FROM messages WHERE conversation_id = $1 AND role = 'assistant' ORDER BY created_at DESC LIMIT 1`,
+    [conversationId],
+  )
+  const messageId = rows[0]?.id
+  if (!messageId) return null
+
+  await db.query(`UPDATE messages SET pending_use_case_json = $1 WHERE id = $2`, [
+    JSON.stringify(pendingUseCase),
+    messageId,
+  ])
+  return messageId
+}
+
+export async function markUseCaseSaved(messageId) {
+  await db.query(`UPDATE messages SET use_case_saved = true WHERE id = $1`, [messageId])
 }
