@@ -30,3 +30,7 @@ export function sendMessage({ conversationId, text }) {
     body: JSON.stringify({ conversationId, text }),
   })
 }
+
+export function saveUseCase(messageId) {
+  return request(`/api/chat/messages/${messageId}/save-use-case`, { method: 'POST' })
+}

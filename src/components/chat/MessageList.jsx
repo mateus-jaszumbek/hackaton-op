@@ -4,7 +4,7 @@ import { BotMessage } from './BotMessage.jsx'
 import { Thinking } from './Thinking.jsx'
 import styles from './MessageList.module.css'
 
-export function MessageList({ msgs, shown, thinking, done }) {
+export function MessageList({ msgs, shown, thinking, done, onSaveUseCase }) {
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -28,6 +28,7 @@ export function MessageList({ msgs, shown, thinking, done }) {
                 answer={m}
                 shown={isLast ? shown : m.text.length}
                 done={isLast ? done : true}
+                onSaveUseCase={onSaveUseCase}
               />
             </div>
           )

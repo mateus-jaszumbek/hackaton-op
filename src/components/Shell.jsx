@@ -55,6 +55,7 @@ export function Shell() {
                 shown={chat.shown}
                 thinking={chat.thinking}
                 done={chat.phase === 'done'}
+                onSaveUseCase={chat.confirmSaveUseCase}
               />
             )}
             <Composer onSend={(text) => chat.ask(text)} />
