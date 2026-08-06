@@ -55,5 +55,16 @@ function extractReply(data) {
     steps: data.steps ?? [],
     note: data.note ?? '',
     source: data.source === 'documentado' ? 'documentado' : 'ia',
+    pendingUseCase: parsePendingUseCase(data.pendingUseCase),
+  }
+}
+
+function parsePendingUseCase(raw) {
+  if (!raw) return null
+  try {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+    return parsed && typeof parsed === 'object' && parsed.cenario ? parsed : null
+  } catch {
+    return null
   }
 }

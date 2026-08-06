@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import {
   addMessage,
-  attachPendingUseCase,
   createConversation,
   getConversation,
   getMessage,
@@ -10,7 +9,6 @@ import {
 } from '../db/conversations.js'
 import { createUseCase } from '../db/useCases.js'
 import { askAgent } from '../lib/n8n.js'
-import { BACKEND_API_KEY } from '../config.js'
 
 export const chatRouter = Router()
 
@@ -37,6 +35,7 @@ chatRouter.post('/', async (req, res) => {
       steps: reply.steps,
       note: reply.note,
       source: reply.source,
+      pendingUseCase: reply.pendingUseCase,
     })
 
     res.json({
@@ -47,53 +46,6 @@ chatRouter.post('/', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Falha ao processar a mensagem', detail: err.message })
   }
-})
-
-// Chamado pelo n8n (branch paralelo) depois de calcular o embedding de um caso de
-// uso novo proposto pela IA. Só anexa o caso na mensagem — não salva na base de
-// casos de uso ainda, isso só acontece se o usuário clicar em "salvar".
-chatRouter.post('/attach-pending-use-case', async (req, res) => {
-  if (BACKEND_API_KEY && req.get('x-api-key') !== BACKEND_API_KEY) {
-    return res.status(401).json({ error: 'x-api-key inválida ou ausente' })
-  }
-
-  const {
-    conversationId,
-    cenario,
-    objetivoCliente,
-    duvida,
-    perguntasParaEntender,
-    caminho1,
-    caminho2,
-    caminho3,
-    recomendacaoFinal,
-    observacoes,
-    embedding,
-  } = req.body ?? {}
-
-  if (!conversationId) return res.status(400).json({ error: 'conversationId é obrigatório' })
-  if (!cenario || !objetivoCliente || !duvida) {
-    return res.status(400).json({ error: 'cenario, objetivoCliente e duvida são obrigatórios' })
-  }
-  if (!Array.isArray(embedding) || embedding.length === 0) {
-    return res.status(400).json({ error: 'embedding deve ser um array de números' })
-  }
-
-  const messageId = await attachPendingUseCase(conversationId, {
-    cenario,
-    objetivoCliente,
-    duvida,
-    perguntasParaEntender: perguntasParaEntender ?? '',
-    caminho1: caminho1 ?? '',
-    caminho2: caminho2 ?? '',
-    caminho3: caminho3 ?? '',
-    recomendacaoFinal: recomendacaoFinal ?? '',
-    observacoes: observacoes ?? '',
-    embedding,
-  })
-
-  if (!messageId) return res.status(404).json({ error: 'Nenhuma mensagem do assistente encontrada pra essa conversa' })
-  res.json({ ok: true, messageId })
 })
 
 // Chamado pelo front quando o usuário decide salvar um caso de uso sugerido pela

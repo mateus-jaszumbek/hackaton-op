@@ -43,16 +43,21 @@ export async function listConversations() {
   return conversations.map((c, i) => ({ ...c, preview: previews[i].rows[0]?.text ?? '' }))
 }
 
-export async function addMessage(conversationId, role, text, { steps = [], note = '', source = 'ia' } = {}) {
+export async function addMessage(
+  conversationId,
+  role,
+  text,
+  { steps = [], note = '', source = 'ia', pendingUseCase = null } = {},
+) {
   const id = randomUUID()
   const now = Date.now()
   await db.query(
-    `INSERT INTO messages (id, conversation_id, role, text, steps_json, note, source, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    [id, conversationId, role, text, JSON.stringify(steps), note, source, now],
+    `INSERT INTO messages (id, conversation_id, role, text, steps_json, note, source, pending_use_case_json, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [id, conversationId, role, text, JSON.stringify(steps), note, source, JSON.stringify(pendingUseCase), now],
   )
   await db.query(`UPDATE conversations SET updated_at = $1 WHERE id = $2`, [now, conversationId])
-  return { id, conversationId, role, text, steps, note, source, createdAt: now }
+  return { id, conversationId, role, text, steps, note, source, pendingUseCase, useCaseSaved: false, createdAt: now }
 }
 
 export async function listMessages(conversationId) {
@@ -80,21 +85,6 @@ function toMessageApi(m) {
 export async function getMessage(id) {
   const { rows } = await db.query(`SELECT * FROM messages WHERE id = $1`, [id])
   return rows[0] ? toMessageApi(rows[0]) : null
-}
-
-export async function attachPendingUseCase(conversationId, pendingUseCase) {
-  const { rows } = await db.query(
-    `SELECT id FROM messages WHERE conversation_id = $1 AND role = 'assistant' ORDER BY created_at DESC LIMIT 1`,
-    [conversationId],
-  )
-  const messageId = rows[0]?.id
-  if (!messageId) return null
-
-  await db.query(`UPDATE messages SET pending_use_case_json = $1 WHERE id = $2`, [
-    JSON.stringify(pendingUseCase),
-    messageId,
-  ])
-  return messageId
 }
 
 export async function markUseCaseSaved(messageId) {
