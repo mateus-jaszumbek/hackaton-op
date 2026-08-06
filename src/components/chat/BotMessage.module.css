@@ -33,6 +33,7 @@
   font-size: 13.5px;
   line-height: 1.6;
   text-wrap: pretty;
+  white-space: pre-wrap;
 }
 
 .caret {
