@@ -6,6 +6,7 @@ import { meRouter } from './routes/me.js'
 import { conversationsRouter } from './routes/conversations.js'
 import { chatRouter } from './routes/chat.js'
 import { casesRouter } from './routes/cases.js'
+import { equipmentRouter } from './routes/equipment.js'
 import { webhookAuthRouter } from './routes/webhookAuth.js'
 
 const app = express()
@@ -18,6 +19,7 @@ app.use('/api/me', meRouter)
 app.use('/api/conversations', conversationsRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/cases', casesRouter)
+app.use('/api/equipment', equipmentRouter)
 app.use('/api/webhook-auth', webhookAuthRouter)
 
 const HOST = '0.0.0.0'
