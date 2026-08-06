@@ -329,6 +329,10 @@
             {
               "name": "source",
               "stringValue": "={{ $node[\"Code - Parse LLM JSON\"].json.source }}"
+            },
+            {
+              "name": "pendingUseCase",
+              "stringValue": "={{ $node[\"Code - Attach Pending Use Case\"].json.pendingUseCase }}"
             }
           ]
         },
@@ -373,19 +377,6 @@
     },
     {
       "parameters": {
-        "jsCode": "const parsed = $('Code - Parse LLM JSON').item.json;\n// Sem itens de saida = nada depois deste node executa (branch termina aqui).\n// Mais confiavel que um IF node pra esse tipo de gate booleano.\nif (!parsed.hasNewUseCase) return [];\nreturn [{ json: parsed }];"
-      },
-      "id": "f3a3a333-3333-4a33-8333-3a3333a33333",
-      "name": "Code - Guard New Use Case",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -4672,
-        1424
-      ]
-    },
-    {
-      "parameters": {
         "method": "POST",
         "url": "https://api.openai.com/v1/embeddings",
         "authentication": "predefinedCredentialType",
@@ -402,7 +393,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ model: 'text-embedding-3-small', input: $json.nc_cenario + ' ' + $json.nc_objetivoCliente + ' ' + $json.nc_duvida }) }}",
+        "body": "={{ JSON.stringify({ model: 'text-embedding-3-small', input: $json.hasNewUseCase ? ($json.nc_cenario + ' ' + $json.nc_objetivoCliente + ' ' + $json.nc_duvida) : 'n/a' }) }}",
         "options": {
           "timeout": 30000
         }
@@ -412,8 +403,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -4448,
-        1424
+        -4832,
+        1264
       ],
       "credentials": {
         "openAiApi": {
@@ -427,49 +418,16 @@
     },
     {
       "parameters": {
-        "jsCode": "const parsed = $('Code - Parse LLM JSON').item.json;\nconst embedding = $json.data[0].embedding;\nreturn [{ json: {\n  conversationId: parsed.conversationId,\n  cenario: parsed.nc_cenario,\n  objetivoCliente: parsed.nc_objetivoCliente,\n  duvida: parsed.nc_duvida,\n  perguntasParaEntender: parsed.nc_perguntasParaEntender,\n  caminho1: parsed.nc_caminho1,\n  caminho2: parsed.nc_caminho2,\n  caminho3: parsed.nc_caminho3,\n  recomendacaoFinal: parsed.nc_recomendacaoFinal,\n  observacoes: parsed.nc_observacoes,\n  embedding, source: 'ia',\n} }];"
+        "jsCode": "const parsed = $('Code - Parse LLM JSON').item.json;\nconst embedding = $json.data[0].embedding;\nconst pendingUseCase = parsed.hasNewUseCase ? {\n  cenario: parsed.nc_cenario,\n  objetivoCliente: parsed.nc_objetivoCliente,\n  duvida: parsed.nc_duvida,\n  perguntasParaEntender: parsed.nc_perguntasParaEntender,\n  caminho1: parsed.nc_caminho1,\n  caminho2: parsed.nc_caminho2,\n  caminho3: parsed.nc_caminho3,\n  recomendacaoFinal: parsed.nc_recomendacaoFinal,\n  observacoes: parsed.nc_observacoes,\n  embedding,\n} : null;\nreturn [{ json: { ...parsed, pendingUseCase: JSON.stringify(pendingUseCase) } }];"
       },
       "id": "c5a5a555-5555-4a55-8555-5a5555a55555",
-      "name": "Code - Build Save UseCase Body",
+      "name": "Code - Attach Pending Use Case",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -4224,
-        1424
+        -4752,
+        1264
       ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://hackaton-op.onrender.com/api/chat/attach-pending-use-case",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "x-api-key",
-              "value": "78f815a7db53acbe8e5148c80181f88d298d75eed27370832ba3a2fd95ad974d"
-            }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ JSON.stringify($json) }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "id": "e6a6a666-6666-4a66-8666-6a6666a66666",
-      "name": "HTTP - Attach Pending Use Case",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        -4000,
-        1424
-      ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 2000
     }
   ],
   "connections": {
@@ -583,12 +541,29 @@
       "main": [
         [
           {
-            "node": "IF openCase?",
+            "node": "HTTP - Embed New Case",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "HTTP - Embed New Case": {
+      "main": [
+        [
           {
-            "node": "Code - Guard New Use Case",
+            "node": "Code - Attach Pending Use Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Attach Pending Use Case": {
+      "main": [
+        [
+          {
+            "node": "IF openCase?",
             "type": "main",
             "index": 0
           }
@@ -640,39 +615,6 @@
         [
           {
             "node": "Respond to Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code - Guard New Use Case": {
-      "main": [
-        [
-          {
-            "node": "HTTP - Embed New Case",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP - Embed New Case": {
-      "main": [
-        [
-          {
-            "node": "Code - Build Save UseCase Body",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code - Build Save UseCase Body": {
-      "main": [
-        [
-          {
-            "node": "HTTP - Attach Pending Use Case",
             "type": "main",
             "index": 0
           }
