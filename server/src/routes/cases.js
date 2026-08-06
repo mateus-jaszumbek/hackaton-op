@@ -16,7 +16,7 @@ casesRouter.use((req, res, next) => {
   next()
 })
 
-casesRouter.post('/', (req, res) => {
+casesRouter.post('/', async (req, res) => {
   const { conversationId, title, description, priority } = req.body ?? {}
 
   const trimmedTitle = typeof title === 'string' ? title.trim() : ''
@@ -27,14 +27,14 @@ casesRouter.post('/', (req, res) => {
   if (!PRIORITIES.includes(priority)) {
     return res.status(400).json({ error: `priority deve ser um de: ${PRIORITIES.join(', ')}` })
   }
-  if (conversationId && !getConversation(conversationId)) {
+  if (conversationId && !(await getConversation(conversationId))) {
     return res.status(404).json({ error: 'Conversa não encontrada' })
   }
 
-  const recent = findRecentCaseByConversation(conversationId, DEDUP_WINDOW_MS)
+  const recent = await findRecentCaseByConversation(conversationId, DEDUP_WINDOW_MS)
   if (recent) return res.status(200).json(recent)
 
-  const created = createCase({
+  const created = await createCase({
     conversationId: conversationId ?? null,
     title: trimmedTitle,
     description: trimmedDescription,
@@ -43,8 +43,8 @@ casesRouter.post('/', (req, res) => {
   res.status(201).json(created)
 })
 
-casesRouter.get('/:id', (req, res) => {
-  const found = getCase(req.params.id)
+casesRouter.get('/:id', async (req, res) => {
+  const found = await getCase(req.params.id)
   if (!found) return res.status(404).json({ error: 'Case não encontrado' })
   res.json(found)
 })

@@ -1,17 +1,24 @@
 # server
 
 Backend mínimo para o Agente Interno de Procedimentos. Sem autenticação — todo request é tratado
-como o mesmo usuário fixo (`CURRENT_USER` em `src/config.js`). Persistência em SQLite
-(`node:sqlite`, nativo do Node 22+, sem dependência externa), arquivo em `data/app.db`.
+como o mesmo usuário fixo (`CURRENT_USER` em `src/config.js`). Persistência em PostgreSQL via
+`pg` — necessário porque o plano Free do Render não tem Persistent Disk, então um SQLite local
+seria zerado a cada deploy/sleep do serviço.
 
 ## Rodando
 
 ```bash
 cd server
 npm install
-cp .env.example .env   # preencher N8N_WEBHOOK_URL quando tiver o workflow publicado
+cp .env.example .env   # preencher DATABASE_URL e N8N_WEBHOOK_URL
 npm run dev             # http://localhost:8787
 ```
+
+`DATABASE_URL` é a connection string de um Postgres (local, [Neon](https://neon.tech),
+[Supabase](https://supabase.com) etc). Recomendado: Neon free tier — não expira e faz
+autosuspend/resume sozinho na primeira query após um período ocioso (só demora um pouco na
+próxima chamada). O schema (tabelas, índices) é criado automaticamente no boot do servidor
+(`ensureSchema()` em `src/db/index.js`).
 
 Sem `N8N_WEBHOOK_URL` configurado, `/api/chat` responde com um eco de stub — dá pra testar a
 integração do front antes do workflow do n8n existir.

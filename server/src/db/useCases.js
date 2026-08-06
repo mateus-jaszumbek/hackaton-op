@@ -1,15 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { db } from './index.js'
 
-const insertUseCase = db.prepare(
-  `INSERT INTO use_cases
-     (id, conversation_id, setor, cenario, objetivo_cliente, duvida, perguntas_para_entender,
-      caminho_1, caminho_2, caminho_3, recomendacao_final, observacoes, embedding, source, created_at, updated_at)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-)
-const selectUseCase = db.prepare(`SELECT * FROM use_cases WHERE id = ?`)
-const selectAllForSearch = db.prepare(`SELECT * FROM use_cases`)
-
 function toApi(u) {
   return {
     id: u.id,
@@ -25,8 +16,8 @@ function toApi(u) {
     recomendacaoFinal: u.recomendacao_final,
     observacoes: u.observacoes,
     source: u.source,
-    createdAt: u.created_at,
-    updatedAt: u.updated_at,
+    createdAt: Number(u.created_at),
+    updatedAt: Number(u.updated_at),
   }
 }
 
@@ -43,7 +34,7 @@ function cosineSimilarity(a, b) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB))
 }
 
-export function createUseCase({
+export async function createUseCase({
   conversationId = null,
   setor = 'CS',
   cenario,
@@ -60,34 +51,41 @@ export function createUseCase({
 }) {
   const id = randomUUID()
   const now = Date.now()
-  insertUseCase.run(
-    id,
-    conversationId,
-    setor,
-    cenario,
-    objetivoCliente,
-    duvida,
-    perguntasParaEntender,
-    caminho1,
-    caminho2,
-    caminho3,
-    recomendacaoFinal,
-    observacoes,
-    JSON.stringify(embedding),
-    source,
-    now,
-    now,
+  const { rows } = await db.query(
+    `INSERT INTO use_cases
+       (id, conversation_id, setor, cenario, objetivo_cliente, duvida, perguntas_para_entender,
+        caminho_1, caminho_2, caminho_3, recomendacao_final, observacoes, embedding, source, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+     RETURNING *`,
+    [
+      id,
+      conversationId,
+      setor,
+      cenario,
+      objetivoCliente,
+      duvida,
+      perguntasParaEntender,
+      caminho1,
+      caminho2,
+      caminho3,
+      recomendacaoFinal,
+      observacoes,
+      JSON.stringify(embedding),
+      source,
+      now,
+      now,
+    ],
   )
-  return toApi(selectUseCase.get(id))
+  return toApi(rows[0])
 }
 
-export function getUseCase(id) {
-  const u = selectUseCase.get(id)
-  return u ? toApi(u) : null
+export async function getUseCase(id) {
+  const { rows } = await db.query(`SELECT * FROM use_cases WHERE id = $1`, [id])
+  return rows[0] ? toApi(rows[0]) : null
 }
 
-export function searchUseCases(queryEmbedding, topK = 5) {
-  const rows = selectAllForSearch.all()
+export async function searchUseCases(queryEmbedding, topK = 5) {
+  const { rows } = await db.query(`SELECT * FROM use_cases`)
   const scored = rows.map((row) => ({
     ...toApi(row),
     similarity: cosineSimilarity(queryEmbedding, JSON.parse(row.embedding)),

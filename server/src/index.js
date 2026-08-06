@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import './db/index.js'
+import { ensureSchema } from './db/index.js'
 import { PORT } from './config.js'
 import { meRouter } from './routes/me.js'
 import { conversationsRouter } from './routes/conversations.js'
@@ -24,6 +24,7 @@ app.use('/api/webhook-auth', webhookAuthRouter)
 
 const HOST = '0.0.0.0'
 
+await ensureSchema()
 app.listen(PORT, HOST, () => {
   console.log(`[server] rodando em http://${HOST}:${PORT}`)
 })

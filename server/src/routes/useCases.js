@@ -15,7 +15,7 @@ useCasesRouter.use((req, res, next) => {
   next()
 })
 
-useCasesRouter.post('/', (req, res) => {
+useCasesRouter.post('/', async (req, res) => {
   const {
     conversationId,
     setor,
@@ -45,11 +45,11 @@ useCasesRouter.post('/', (req, res) => {
   if (source !== undefined && !SOURCES.includes(source)) {
     return res.status(400).json({ error: `source deve ser um de: ${SOURCES.join(', ')}` })
   }
-  if (conversationId && !getConversation(conversationId)) {
+  if (conversationId && !(await getConversation(conversationId))) {
     return res.status(404).json({ error: 'Conversa não encontrada' })
   }
 
-  const created = createUseCase({
+  const created = await createUseCase({
     conversationId: conversationId ?? null,
     setor: setor || 'CS',
     cenario: trimmedCenario,
@@ -67,7 +67,7 @@ useCasesRouter.post('/', (req, res) => {
   res.status(201).json(created)
 })
 
-useCasesRouter.post('/search', (req, res) => {
+useCasesRouter.post('/search', async (req, res) => {
   const { embedding, topK } = req.body ?? {}
 
   if (!Array.isArray(embedding) || embedding.length === 0 || !embedding.every((n) => typeof n === 'number')) {
@@ -75,11 +75,11 @@ useCasesRouter.post('/search', (req, res) => {
   }
 
   const k = Number.isInteger(topK) && topK > 0 ? topK : 5
-  res.json({ results: searchUseCases(embedding, k) })
+  res.json({ results: await searchUseCases(embedding, k) })
 })
 
-useCasesRouter.get('/:id', (req, res) => {
-  const found = getUseCase(req.params.id)
+useCasesRouter.get('/:id', async (req, res) => {
+  const found = await getUseCase(req.params.id)
   if (!found) return res.status(404).json({ error: 'Caso de uso não encontrado' })
   res.json(found)
 })

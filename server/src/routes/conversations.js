@@ -3,12 +3,12 @@ import { getConversation, listConversations, listMessages } from '../db/conversa
 
 export const conversationsRouter = Router()
 
-conversationsRouter.get('/', (_req, res) => {
-  res.json(listConversations())
+conversationsRouter.get('/', async (_req, res) => {
+  res.json(await listConversations())
 })
 
-conversationsRouter.get('/:id/messages', (req, res) => {
-  const conversation = getConversation(req.params.id)
+conversationsRouter.get('/:id/messages', async (req, res) => {
+  const conversation = await getConversation(req.params.id)
   if (!conversation) return res.status(404).json({ error: 'Conversa não encontrada' })
-  res.json(listMessages(req.params.id))
+  res.json(await listMessages(req.params.id))
 })

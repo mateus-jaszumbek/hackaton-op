@@ -1,12 +1,12 @@
 # Agente Interno de Procedimentos
 
-Front-end (Vite + React) + backend (Express + SQLite) para o chat do agente interno. Sem
+Front-end (Vite + React) + backend (Express + PostgreSQL) para o chat do agente interno. Sem
 autenticação — todo mundo usa o mesmo usuário fixo (`Teste hackaton`). Ver `server/README.md`
 para detalhes da API e do contrato esperado do webhook do n8n.
 
 ## Rodando o projeto
 
-Requisitos: Node 22+ (usa `node:sqlite`, nativo do runtime).
+Requisitos: Node 18+ e um Postgres acessível via `DATABASE_URL` (ver `server/README.md`).
 
 ```bash
 npm run install:all   # instala as dependências da raiz (front) e de /server (back) — só na primeira vez

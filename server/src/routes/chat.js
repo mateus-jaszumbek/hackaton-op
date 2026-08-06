@@ -10,11 +10,11 @@ chatRouter.post('/', async (req, res) => {
     const trimmed = typeof text === 'string' ? text.trim() : ''
     if (!trimmed) return res.status(400).json({ error: 'text é obrigatório' })
 
-    let conversation = conversationId ? getConversation(conversationId) : null
-    if (!conversation) conversation = createConversation(trimmed)
+    let conversation = conversationId ? await getConversation(conversationId) : null
+    if (!conversation) conversation = await createConversation(trimmed)
 
-    addMessage(conversation.id, 'user', trimmed)
-    const history = listMessages(conversation.id).map((m) => ({ role: m.role, text: m.text }))
+    await addMessage(conversation.id, 'user', trimmed)
+    const history = (await listMessages(conversation.id)).map((m) => ({ role: m.role, text: m.text }))
 
     let reply
     try {
@@ -23,7 +23,7 @@ chatRouter.post('/', async (req, res) => {
       return res.status(502).json({ error: 'Falha ao consultar o agente', detail: err.message })
     }
 
-    const saved = addMessage(conversation.id, 'assistant', reply.text, {
+    const saved = await addMessage(conversation.id, 'assistant', reply.text, {
       steps: reply.steps,
       note: reply.note,
       source: reply.source,
