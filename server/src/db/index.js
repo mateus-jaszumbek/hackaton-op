@@ -36,4 +36,23 @@ db.exec(`
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS use_cases (
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT REFERENCES conversations(id),
+    setor TEXT NOT NULL DEFAULT 'CS',
+    cenario TEXT NOT NULL,
+    objetivo_cliente TEXT NOT NULL,
+    duvida TEXT NOT NULL,
+    perguntas_para_entender TEXT NOT NULL DEFAULT '',
+    caminho_1 TEXT NOT NULL DEFAULT '',
+    caminho_2 TEXT NOT NULL DEFAULT '',
+    caminho_3 TEXT NOT NULL DEFAULT '',
+    recomendacao_final TEXT NOT NULL DEFAULT '',
+    observacoes TEXT NOT NULL DEFAULT '',
+    embedding TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'ia')),
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
 `)
