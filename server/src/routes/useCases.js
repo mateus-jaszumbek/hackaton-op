@@ -75,7 +75,7 @@ useCasesRouter.post('/search', (req, res) => {
   }
 
   const k = Number.isInteger(topK) && topK > 0 ? topK : 5
-  res.json(searchUseCases(embedding, k))
+  res.json({ results: searchUseCases(embedding, k) })
 })
 
 useCasesRouter.get('/:id', (req, res) => {
