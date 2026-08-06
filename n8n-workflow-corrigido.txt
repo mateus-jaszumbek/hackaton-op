@@ -441,7 +441,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://hackaton-op.onrender.com/api/use-cases",
+        "url": "https://hackaton-op.onrender.com/api/chat/attach-pending-use-case",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -460,7 +460,7 @@
         }
       },
       "id": "e6a6a666-6666-4a66-8666-6a6666a66666",
-      "name": "HTTP - Save New Use Case",
+      "name": "HTTP - Attach Pending Use Case",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
@@ -672,7 +672,7 @@
       "main": [
         [
           {
-            "node": "HTTP - Save New Use Case",
+            "node": "HTTP - Attach Pending Use Case",
             "type": "main",
             "index": 0
           }
