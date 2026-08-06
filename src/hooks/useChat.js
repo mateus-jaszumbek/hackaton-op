@@ -1,8 +1,6 @@
 import { useEffect, useReducer } from 'react'
 import { getMessages, saveUseCase, sendMessage } from '../services/api.js'
 
-const PENDING_USE_CASE_CHECK_MS = 4000
-
 const TICK_MS = 26
 const CHARS_PER_TICK = 3
 export const TITLE_MAX = 54
@@ -48,15 +46,10 @@ function reducer(state, action) {
             steps: action.steps,
             note: action.note,
             source: action.source,
-            pendingUseCase: null,
+            pendingUseCase: action.pendingUseCase,
             useCaseSaved: false,
           },
         ],
-      }
-    case 'attach-pending-use-case':
-      return {
-        ...state,
-        msgs: state.msgs.map((m) => (m.id === action.messageId ? { ...m, pendingUseCase: action.pendingUseCase } : m)),
       }
     case 'use-case-saved':
       return {
@@ -115,29 +108,11 @@ export function useChat() {
         steps: data.reply.steps,
         note: data.reply.note,
         source: data.reply.source,
+        pendingUseCase: data.reply.pendingUseCase,
       })
-      checkPendingUseCaseLater(data.conversationId, data.reply.id)
     } catch (err) {
       dispatch({ type: 'error', text: `Não consegui falar com o agente: ${err.message}` })
     }
-  }
-
-  // O caso de uso sugerido pela IA (se houver) chega com um pequeno atraso —
-  // o n8n calcula o embedding num branch paralelo e só anexa na mensagem
-  // depois que a resposta principal já foi enviada. Confere uma vez, depois
-  // que o embedding provavelmente já chegou.
-  function checkPendingUseCaseLater(conversationId, messageId) {
-    setTimeout(async () => {
-      try {
-        const msgs = await getMessages(conversationId)
-        const match = msgs.find((m) => m.id === messageId)
-        if (match?.pendingUseCase) {
-          dispatch({ type: 'attach-pending-use-case', messageId, pendingUseCase: match.pendingUseCase })
-        }
-      } catch {
-        // silencioso — é só uma melhoria de UX, não afeta o resto do chat
-      }
-    }, PENDING_USE_CASE_CHECK_MS)
   }
 
   async function confirmSaveUseCase(messageId) {
