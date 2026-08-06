@@ -1,0 +1,718 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-inbound-v2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "31793bce-ce21-4b52-8872-79b9c33b5e25",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -6768,
+        1312
+      ],
+      "webhookId": "847ac65b-8313-4886-88f1-40f766f02fe8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hackaton-op.onrender.com/api/webhook-auth/validate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{$json.headers?.['x-webhook-secret'] || $json.headers?.['X-Webhook-Secret'] || ''}}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "9f6e29d3-25ff-4d0f-990b-366c341384d7",
+      "name": "HTTP - Validate Secret (Render)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -6496,
+        1312
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.statusCode}}",
+              "operation": "equal",
+              "value2": 200
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "73e61318-44de-4c5e-a253-585b4332f1ea",
+      "name": "IF secret valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -6256,
+        1312
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a77a4d06-6ab3-4c8b-8367-55a08abfa9aa",
+      "name": "Set Response (unauthorized)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -6016,
+        1536
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "49a251a7-fff8-491a-aadc-62b6f8f2f104",
+      "name": "Respond 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -5776,
+        1536
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bd41c67c-e1a3-46fd-9dc6-6d1ca2e1ecf0",
+      "name": "Set / Normalize",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -6016,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'text-embedding-3-small', input: $('Webhook').item.json.body.message }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "e1a1a111-1111-4a11-8111-1a1111a11111",
+      "name": "HTTP - Embed Query",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -5792,
+        1264
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "RbzAA9Aidcr8C5pC",
+          "name": "OpenAI account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hackaton-op.onrender.com/api/use-cases/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "78f815a7db53acbe8e5148c80181f88d298d75eed27370832ba3a2fd95ad974d"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ embedding: $json.data[0].embedding, topK: 5 }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "e2a2a222-2222-4a22-8222-2a2222a22222",
+      "name": "HTTP - Search Use Cases",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -5568,
+        1264
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $('Webhook').item.json.body;\n\n// useCases vem do node \"HTTP - Search Use Cases\" (POST /api/use-cases/search),\n// que devolve { results: [...] } — não do Webhook, por isso lê do input direto.\nconst useCases = Array.isArray($input.item.json.results) ? $input.item.json.results : [];\n\nconst knowledgeBase = useCases.length\n  ? useCases\n      .map((u, i) => `${i + 1}. Cenário: ${u.cenario}\n   Objetivo do cliente: ${u.objetivoCliente}\n   Dúvida: ${u.duvida}\n   Caminho 1: ${u.caminho1 || '-'}\n   Caminho 2: ${u.caminho2 || '-'}\n   Caminho 3: ${u.caminho3 || '-'}\n   Recomendação final: ${u.recomendacaoFinal || '-'}\n   Observações: ${u.observacoes || '-'}`)\n      .join('\\n\\n')\n  : '(nenhum caso parecido encontrado na base de conhecimento)';\n\nconst systemPrompt = `Você é um agente de triagem de suporte e de CS (Customer Success) do sistema Obra Prima (OP), um ERP para pequenas e médias empresas de construção civil.\n\nQuando o cliente pede algo que o OP não faz nativamente, ajude a encontrar uma adaptação usando funcionalidades que já existem no sistema (etapas orçamentárias, contas gerenciais, centro de custo, cadastro de insumos, retenções, movimentos de ajuste, faturamento, filiais, contas bancárias, etc).\n\n## Como raciocinar\n1. Entenda o pedido real do cliente, não a implementação que ele já imaginou. Ex: \"controlar retroescavadeira\" na real é \"controlar localização, tempo parado e custo por equipamento\".\n2. Identifique o que falta contextualizar antes de recomendar (prioridade financeira x operacional, precisa de previsto x realizado, precisa refletir no financeiro/fiscal, é regra fixa ou caso a caso). Se não estiver claro, pergunte em vez de assumir. Se o histórico da conversa já respondeu isso, NÃO repita a pergunta — avance pro próximo passo.\n3. Proponha 2 ou 3 caminhos concretos usando recursos que já existem no OP, cada um com vantagem e limitação.\n4. Feche com uma recomendação honesta: quando não existe solução perfeita, diga que depende da prioridade do cliente e indique qual caminho serve pra qual prioridade. Não invente funcionalidade que o sistema não tem.\n\n## Base de conhecimento (casos mais parecidos encontrados pra essa pergunta)\n${knowledgeBase}\n\n## Quando os casos acima não resolvem\nSe nenhum dos casos recuperados cobre de verdade a situação do cliente, raciocine você mesmo pelos passos acima e proponha os caminhos. Nesse caso, preencha também \"newUseCase\" no MESMO padrão da planilha de casos de uso, pra esse caso virar conhecimento institucional pra próxima vez:\n{\n  \"cenario\": string,        // a situação, de forma genérica (sem nome do cliente)\n  \"objetivoCliente\": string,\n  \"duvida\": string,\n  \"perguntasParaEntender\": string,\n  \"caminho1\": string,\n  \"caminho2\": string,\n  \"caminho3\": string,       // pode ser \"\" se só houver 2 caminhos\n  \"recomendacaoFinal\": string,\n  \"observacoes\": string\n}\nSe algum caso recuperado já resolveu bem a situação, deixe \"newUseCase\": null.\n\n## Regras de abertura de caso\nResponda SEMPRE estritamente em JSON válido no formato exato: {\"replyText\": string, \"openCase\": boolean, \"case\": {\"title\": string, \"description\": string, \"priority\": \"baixa\"|\"media\"|\"alta\"}, \"newUseCase\": null | {\"cenario\": string, \"objetivoCliente\": string, \"duvida\": string, \"perguntasParaEntender\": string, \"caminho1\": string, \"caminho2\": string, \"caminho3\": string, \"recomendacaoFinal\": string, \"observacoes\": string}, \"note\": string}.\nopenCase true apenas se o usuário pedir explicitamente para abrir chamado/case, OU relatar um problema concreto (atraso, erro, falha, cobrança, incidente), OU quando nenhum dos caminhos propostos atenda a necessidade do cliente (registrar como pedido de melhoria/exceção).\npriority: alta se bloqueio/urgente; media se impacto relevante; baixa se dúvida.\ndescription deve incluir conversationId e um resumo do contexto/pedido do cliente.`;\n\nlet history = item.history ?? [];\nif (typeof history === 'string') {\n  try { history = JSON.parse(history); } catch { history = []; }\n}\nif (!Array.isArray(history)) history = [];\n\nconst userMsg = String(item.message ?? item.text ?? '').trim();\n\nconst messages = [\n  { role: 'system', content: systemPrompt },\n  ...history\n    .filter(h => h && typeof h === 'object')\n    .map(h => ({\n      role: h.role === 'assistant' ? 'assistant' : 'user',\n      content: String(h.text ?? h.content ?? '')\n    }))\n];\n\n// O backend ja inclui a mensagem atual como ultimo item de \"history\" (foi\n// adicionada ao banco antes de chamar o webhook). So repete aqui se por\n// algum motivo history nao tiver essa mensagem no final (ex: history vazio).\nconst lastHistoryText = history.length\n  ? String(history[history.length - 1].text ?? history[history.length - 1].content ?? '').trim()\n  : '';\nif (userMsg && lastHistoryText !== userMsg) {\n  messages.push({ role: 'user', content: userMsg });\n}\n\nconst body = {\n  model: 'gpt-4o-mini',\n  temperature: 0.2,\n  response_format: { type: 'json_object' },\n  messages\n};\n\nreturn [{ json: { ...item, openaiBody: JSON.stringify(body) } }];\n"
+      },
+      "id": "b56cf0c9-5a61-4d80-8a6e-426f3aa635fd",
+      "name": "Code - Build OpenAI Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5344,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{$json.openaiBody}}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "860a8657-0987-45c7-913a-9f16a0436ac2",
+      "name": "HTTP - OpenAI ChatCompletions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -5120,
+        1264
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "RbzAA9Aidcr8C5pC",
+          "name": "OpenAI account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mode deste node: Run Once for Each Item\n\nconst original = $('Code - Build OpenAI Body').item.json; // conversationId, message, history, user\n\nconst content = $json?.choices?.[0]?.message?.content;\n\nif (!content) {\n  throw new Error('OpenAI response missing choices[0].message.content');\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(content);\n} catch (e) {\n  throw new Error('Failed to JSON.parse model content: ' + content);\n}\n\n// Guardrails / normalização\nparsed.openCase = !!parsed.openCase;\n\nparsed.case = parsed.case ?? {};\nparsed.case.title = String(parsed.case.title ?? '');\nparsed.case.description = String(parsed.case.description ?? '');\nparsed.case.priority = String(parsed.case.priority ?? 'baixa');\n\nif (!['baixa', 'media', 'alta'].includes(parsed.case.priority)) {\n  parsed.case.priority = 'baixa';\n}\n\nparsed.replyText = String(parsed.replyText ?? '');\nparsed.note = String(parsed.note ?? '');\nparsed.newUseCase = parsed.newUseCase ?? null;\n\n// Campos do newUseCase achatados no nível superior (nc_*) — não dependemos de\n// espalhar um objeto aninhado várias etapas depois, atravessando um node HTTP no\n// meio do caminho (na prática isso perdia os campos). String simples no topo do\n// item é o mesmo padrão que já funciona pra conversationId/message.\nconst nc = parsed.newUseCase && typeof parsed.newUseCase === 'object' ? parsed.newUseCase : {};\nparsed.nc_cenario = String(nc.cenario ?? '');\nparsed.nc_objetivoCliente = String(nc.objetivoCliente ?? '');\nparsed.nc_duvida = String(nc.duvida ?? '');\nparsed.nc_perguntasParaEntender = String(nc.perguntasParaEntender ?? '');\nparsed.nc_caminho1 = String(nc.caminho1 ?? '');\nparsed.nc_caminho2 = String(nc.caminho2 ?? '');\nparsed.nc_caminho3 = String(nc.caminho3 ?? '');\nparsed.nc_recomendacaoFinal = String(nc.recomendacaoFinal ?? '');\nparsed.nc_observacoes = String(nc.observacoes ?? '');\n\n// Campo booleano explícito (real true/false) pro IF node — evita o bug clássico do\n// n8n de expressão booleana virar string \"false\" e ser tratada como truthy.\nparsed.hasNewUseCase = !!(parsed.nc_cenario || parsed.nc_duvida);\n\n// Defaults quando abrir case\nif (parsed.openCase) {\n  if (!parsed.case.title.trim()) {\n    parsed.case.title = 'Chamado via chat';\n  }\n\n  if (!parsed.case.description.trim()) {\n    const conv = String(original.conversationId ?? '');\n    const msg = String(original.message ?? original.text ?? '');\n    const userId = String(original.user?.id ?? '');\n    const userName = String(original.user?.name ?? '');\n\n    parsed.case.description =\n      `conversationId: ${conv}\\n` +\n      `user: ${userName} (${userId})\\n` +\n      `mensagem: ${msg}`;\n  }\n}\n\n// IMPORTANTE: preserva contexto do item original (não do $json atual, que é o response da OpenAI)\nreturn [\n  {\n    json: {\n      ...original, // conversationId, message, history, user, useCases\n      ...parsed,   // replyText, openCase, case, newUseCase, note\n    },\n  },\n];\n"
+      },
+      "id": "56a2fd20-ba5f-4c82-b38d-d2064e81e8b9",
+      "name": "Code - Parse LLM JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4896,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.openCase}}",
+              "operation": "isTrue"
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "637b078a-005c-496b-b187-872e01cd0da1",
+      "name": "IF openCase?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -4672,
+        1152
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hackaton-op.onrender.com/api/cases",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "78f815a7db53acbe8e5148c80181f88d298d75eed27370832ba3a2fd95ad974d"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  title: $json.case?.title || 'Chamado via chat',\n  description: $json.case?.description\n    || `conversationId: ${$json.conversationId || ''}\\nmensagem: ${$json.message || ''}`,\n  priority: $json.case?.priority || 'baixa',\n  conversationId: $json.conversationId || ''\n}) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "ff2432dc-0ec8-429c-9d78-e113f858bc6a",
+      "name": "HTTP - Create Case (Render)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -4448,
+        1040
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "text",
+              "stringValue": "={{ $node[\"Code - Parse LLM JSON\"].json.replyText }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7b3c3872-01de-4c7d-a5b5-6a3e4882d08f",
+      "name": "Set Response (with case)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -4224,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "cb109409-3f5c-4710-8ffa-ec42039468c9",
+      "name": "Set Response (no case)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -4448,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "a9f8e41e-25e1-4cef-8117-9159ea53ca58",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -3984,
+        1152
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsed = $('Code - Parse LLM JSON').item.json;\n// Sem itens de saida = nada depois deste node executa (branch termina aqui).\n// Mais confiavel que um IF node pra esse tipo de gate booleano.\nif (!parsed.hasNewUseCase) return [];\nreturn [{ json: parsed }];"
+      },
+      "id": "f3a3a333-3333-4a33-8333-3a3333a33333",
+      "name": "Code - Guard New Use Case",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4672,
+        1424
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'text-embedding-3-small', input: $json.nc_cenario + ' ' + $json.nc_objetivoCliente + ' ' + $json.nc_duvida }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "e4a4a444-4444-4a44-8444-4a4444a44444",
+      "name": "HTTP - Embed New Case",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -4448,
+        1424
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "RbzAA9Aidcr8C5pC",
+          "name": "OpenAI account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsed = $('Code - Parse LLM JSON').item.json;\nconst embedding = $json.data[0].embedding;\nreturn [{ json: {\n  conversationId: parsed.conversationId,\n  cenario: parsed.nc_cenario,\n  objetivoCliente: parsed.nc_objetivoCliente,\n  duvida: parsed.nc_duvida,\n  perguntasParaEntender: parsed.nc_perguntasParaEntender,\n  caminho1: parsed.nc_caminho1,\n  caminho2: parsed.nc_caminho2,\n  caminho3: parsed.nc_caminho3,\n  recomendacaoFinal: parsed.nc_recomendacaoFinal,\n  observacoes: parsed.nc_observacoes,\n  embedding, source: 'ia',\n} }];"
+      },
+      "id": "c5a5a555-5555-4a55-8555-5a5555a55555",
+      "name": "Code - Build Save UseCase Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4224,
+        1424
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hackaton-op.onrender.com/api/use-cases",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "78f815a7db53acbe8e5148c80181f88d298d75eed27370832ba3a2fd95ad974d"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "e6a6a666-6666-4a66-8666-6a6666a66666",
+      "name": "HTTP - Save New Use Case",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -4000,
+        1424
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Validate Secret (Render)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Validate Secret (Render)": {
+      "main": [
+        [
+          {
+            "node": "IF secret valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF secret valid?": {
+      "main": [
+        [
+          {
+            "node": "Set / Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Response (unauthorized)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Response (unauthorized)": {
+      "main": [
+        [
+          {
+            "node": "Respond 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set / Normalize": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Embed Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Embed Query": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Search Use Cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Search Use Cases": {
+      "main": [
+        [
+          {
+            "node": "Code - Build OpenAI Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build OpenAI Body": {
+      "main": [
+        [
+          {
+            "node": "HTTP - OpenAI ChatCompletions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - OpenAI ChatCompletions": {
+      "main": [
+        [
+          {
+            "node": "Code - Parse LLM JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Parse LLM JSON": {
+      "main": [
+        [
+          {
+            "node": "IF openCase?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code - Guard New Use Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF openCase?": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Create Case (Render)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Response (no case)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Create Case (Render)": {
+      "main": [
+        [
+          {
+            "node": "Set Response (with case)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Response (with case)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Response (no case)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Guard New Use Case": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Embed New Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Embed New Case": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Save UseCase Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Save UseCase Body": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Save New Use Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "headers": {
+          "x-forwarded-for": "74.220.48.219",
+          "x-forwarded-proto": "https",
+          "x-forwarded-port": "443",
+          "host": "dev-n8n.01tec.com.br",
+          "content-type": "application/json",
+          "x-webhook-secret": "8994fa82ba16e47b3480028511ae5f5b9ccbbd542b00b150f0557670453465f5",
+          "accept": "*/*",
+          "user-agent": "node"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "conversationId": "8c4de1db-4f2f-4bab-9e79-31181c661269",
+          "message": "Ola",
+          "history": [
+            {
+              "role": "user",
+              "text": "Ola"
+            }
+          ],
+          "user": {
+            "id": "teste-hackaton",
+            "name": "Teste hackaton",
+            "role": "Operações · perfil padrão"
+          }
+        },
+        "webhookUrl": "https://dev-n8n.01tec.com.br/webhook/chat-inbound-v2",
+        "executionMode": "production"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "333f7fdede98953d71017ef2e0ac27e5543ae79f7724abd686718654a6707bfd"
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "seed-manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cases = [\n  {\n    \"cenario\": \"Cliente aluga máquinas/equipamentos (ex: retroescavadeira) e quer controlar localização, tempo de uso e custo de cada equipamento dentro do Obra Prima.\",\n    \"objetivoCliente\": \"Ter controle operacional (localização, tempo parado) e financeiro (custo) por equipamento alugado.\",\n    \"duvida\": \"Como controlar isso dentro do sistema, já que não existe um cadastro nativo de equipamentos com localização?\",\n    \"perguntasParaEntender\": \"O cliente prioriza controle financeiro (custo) ou operacional/físico (localização, tempo de uso)? Precisa de previsto x realizado?\",\n    \"caminho1\": \"Etapa orçamentária por equipamento: dá previsto x realizado, mas não controla localização.\",\n    \"caminho2\": \"Conta gerencial por equipamento: visão financeira boa, mas também sem localização.\",\n    \"caminho3\": \"Cadastrar como insumo em estoque: controla movimentação/saída, mas perde parte do controle financeiro.\",\n    \"recomendacaoFinal\": \"Não existe solução perfeita — nenhum caminho cobre localização física. Se o foco é financeiro, usar etapa ou conta gerencial; se for controle de estoque/movimentação, usar insumo.\",\n    \"observacoes\": \"Ideal seria um módulo nativo de gestão de equipamentos, que o sistema não tem hoje.\"\n  },\n  {\n    \"cenario\": \"Cliente quer detalhar o custo de mão de obra (salários, encargos, alimentação, alojamento) dentro do orçamento da obra.\",\n    \"objetivoCliente\": \"Ter visibilidade detalhada do custo de folha dentro do orçamento.\",\n    \"duvida\": \"Deve criar uma etapa específica de Mão de Obra ou lançar direto no tipo de custo?\",\n    \"perguntasParaEntender\": \"O cliente precisa de detalhamento por tipo de gasto (salário, encargo, alimentação) ou só o total já basta?\",\n    \"caminho1\": \"Criar etapa \\\"Mão de Obra\\\" com sub-itens de salários/encargos/alimentação/alojamento: mais visibilidade e detalhamento.\",\n    \"caminho2\": \"Lançar direto no tipo de custo \\\"Mão de Obra\\\" sem etapa nova: mais simples, porém menos detalhado.\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"Se precisa de detalhamento por categoria de gasto, criar etapa dedicada; se só quer o total, lançar direto no tipo de custo.\",\n    \"observacoes\": \"\"\n  },\n  {\n    \"cenario\": \"Cliente precisa dar baixa de materiais no almoxarifado central sem vincular a uma obra específica (ex: requisição interna).\",\n    \"objetivoCliente\": \"Registrar saída de material sem gerar apropriação em obra.\",\n    \"duvida\": \"Como fazer essa baixa já que o fluxo padrão de consumo exige vínculo com obra?\",\n    \"perguntasParaEntender\": \"Essa baixa precisa de apropriação/rastreio (saber pra onde foi o material) ou só precisa sair do estoque?\",\n    \"caminho1\": \"Movimento de Ajuste Negativo: simples, sem apropriação em obra.\",\n    \"caminho2\": \"Criar obra fictícia e seguir o fluxo padrão de baixa por consumo: mais burocrático, mas mantém apropriação.\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"Se não precisa rastrear pra onde foi, usar Ajuste Negativo (mais simples); se precisa de apropriação, usar obra fictícia.\",\n    \"observacoes\": \"Não existe um movimento nativo pra requisição interna sem obra.\"\n  },\n  {\n    \"cenario\": \"Cliente lança a folha de pagamento e precisa separar o valor pago ao colaborador do valor de encargos pago a terceiros (INSS, FGTS etc).\",\n    \"objetivoCliente\": \"Conciliar corretamente os valores de folha, distinguindo pagamento direto de encargos.\",\n    \"duvida\": \"Como fazer essa separação dentro do sistema?\",\n    \"perguntasParaEntender\": \"Os encargos são pagos junto com a folha ou em datas/guias separadas?\",\n    \"caminho1\": \"Lançar o valor total da folha e cadastrar os encargos como retenção, separando o que é do colaborador do que é de terceiros.\",\n    \"caminho2\": \"\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"Usar retenção pra representar os encargos dentro do lançamento da folha.\",\n    \"observacoes\": \"\"\n  },\n  {\n    \"cenario\": \"Cliente precisa faturar considerando um período diferente do mês calendário (ex: do dia 20 ao dia 20).\",\n    \"objetivoCliente\": \"Faturar por um período customizado sem duplicar documentos já faturados.\",\n    \"duvida\": \"O sistema permite configurar um período de faturamento diferente do calendário?\",\n    \"perguntasParaEntender\": \"O período customizado é fixo/repetitivo todo mês, ou varia caso a caso?\",\n    \"caminho1\": \"Usar a opção \\\"Considerar períodos anteriores\\\" no faturamento e remover manualmente os documentos fora do período desejado.\",\n    \"caminho2\": \"\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"Usar \\\"Considerar períodos anteriores\\\" + remoção manual dos documentos fora do período; o sistema evita duplicar faturamento.\",\n    \"observacoes\": \"Não existe configuração nativa de período de faturamento diferente do mês calendário.\"\n  },\n  {\n    \"cenario\": \"Cliente quer que todos os serviços apareçam no orçamento vendido dentro de cada etapa, mesmo que o valor esteja concentrado em só alguns.\",\n    \"objetivoCliente\": \"Ter visibilidade de todos os serviços na composição do orçamento por etapa.\",\n    \"duvida\": \"Dá pra mostrar todos os serviços sem perder a precisão de medição e previsto x realizado?\",\n    \"perguntasParaEntender\": \"Isso é só pra composição visual/apresentação, ou o cliente precisa de medição, apropriação e previsto x realizado por serviço?\",\n    \"caminho1\": \"Concentrar o valor na etapa e zerar os serviços: bom se for só visual.\",\n    \"caminho2\": \"Distribuir o valor entre os serviços: necessário se precisa de medição/apropriação/previsto x realizado por serviço.\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"Se for só apresentação, concentrar na etapa; se precisa de controle por serviço, distribuir o valor (zerar os serviços tira a precisão dessas funcionalidades).\",\n    \"observacoes\": \"\"\n  },\n  {\n    \"cenario\": \"Cliente faz transferência entre contas bancárias e nota que isso afeta os indicadores do painel gerencial da obra.\",\n    \"objetivoCliente\": \"Fazer a transferência sem distorcer os indicadores gerenciais da obra.\",\n    \"duvida\": \"Por que a transferência está afetando o painel, e como evitar isso?\",\n    \"perguntasParaEntender\": \"A movimentação é interna da empresa (não ligada à obra) ou é uma movimentação da própria obra?\",\n    \"caminho1\": \"Usar centro de custo administrativo quando for movimentação interna da empresa: não afeta indicadores da obra.\",\n    \"caminho2\": \"Manter centro de custo da obra quando a movimentação for da obra mesmo: o efeito líquido zera, é esperado.\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"Classificar corretamente o centro de custo conforme a natureza da movimentação; pra analisar a movimentação bancária em si, o fluxo de caixa é mais adequado que o painel gerencial.\",\n    \"observacoes\": \"\"\n  },\n  {\n    \"cenario\": \"Cliente tem uma obra que envolve duas empresas/CNPJs diferentes (ex: consórcio, sociedade).\",\n    \"objetivoCliente\": \"Gerenciar a obra respeitando a separação fiscal/financeira entre os CNPJs.\",\n    \"duvida\": \"Deve cadastrar como uma obra só ou separar por empresa?\",\n    \"perguntasParaEntender\": \"Cada CNPJ tem gestão fiscal e financeira própria, ou é só uma formalidade e a gestão é unificada?\",\n    \"caminho1\": \"Cadastrar como filial e criar uma obra por empresa: adequado quando cada CNPJ tem gestão própria.\",\n    \"caminho2\": \"Manter uma obra só: mais simples quando não precisa dessa separação.\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"Depende da estrutura fiscal e de como funciona o contrato entre as empresas — separar em filiais/obras se a gestão for realmente independente.\",\n    \"observacoes\": \"\"\n  },\n  {\n    \"cenario\": \"Cliente faz aplicações financeiras (ex: CDB, fundo) usando o caixa da empresa e depois resgata.\",\n    \"objetivoCliente\": \"Registrar aplicações e resgates dentro do controle financeiro do sistema.\",\n    \"duvida\": \"Como representar uma aplicação financeira, já que não é uma conta bancária tradicional?\",\n    \"perguntasParaEntender\": \"A aplicação está vinculada a uma conta bancária específica, e o cliente concilia o extrato manualmente?\",\n    \"caminho1\": \"Criar uma conta bancária específica para representar a aplicação, com transferências entre ela e a conta corrente.\",\n    \"caminho2\": \"\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"Usar uma conta bancária dedicada à aplicação; não espere conciliação automática com o extrato — isso é manual.\",\n    \"observacoes\": \"Não existe um tipo de conta \\\"aplicação financeira\\\" nativo.\"\n  },\n  {\n    \"cenario\": \"Cliente relata que os dados bancários não aparecem no Portal do Cliente.\",\n    \"objetivoCliente\": \"Ter os dados bancários corretos visíveis no Portal do Cliente.\",\n    \"duvida\": \"Por que os dados bancários não aparecem no portal?\",\n    \"perguntasParaEntender\": \"A conta de recebimento foi informada no momento do faturamento? O portal foi atualizado depois da emissão do documento?\",\n    \"caminho1\": \"Conferir se a conta de recebimento foi informada no faturamento e se o portal foi atualizado depois da emissão — os dados só aparecem se essas duas condições forem atendidas.\",\n    \"caminho2\": \"\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"Orientar o cliente a preencher a conta de recebimento no faturamento antes de emitir, já que a atualização não é automática/retroativa.\",\n    \"observacoes\": \"\"\n  },\n  {\n    \"cenario\": \"Cliente é uma incorporadora com uma obra única, mas vende unidades individualmente (ex: apartamentos).\",\n    \"objetivoCliente\": \"Acompanhar financeiramente (e possivelmente orçamentariamente) cada unidade vendida dentro de uma obra que é única na prática.\",\n    \"duvida\": \"Como representar isso no sistema, que não foi feito pra incorporadora?\",\n    \"perguntasParaEntender\": \"O cliente precisa só do controle financeiro (pagamento) por unidade, ou também de previsto x realizado por unidade?\",\n    \"caminho1\": \"Tratar a obra como \\\"cliente\\\" e criar uma obra por unidade vendida, focando no controle financeiro/pagamento.\",\n    \"caminho2\": \"Se precisar de previsto x realizado por unidade, criar também um orçamento por unidade — multiplica o trabalho.\",\n    \"caminho3\": \"\",\n    \"recomendacaoFinal\": \"O sistema não é feito pra incorporadora; usar obra por unidade é uma forma de mitigar, não uma solução nativa. Escolher o caminho conforme a necessidade real de detalhamento.\",\n    \"observacoes\": \"Foco do sistema é construtora pequena/média, não incorporadora.\"\n  }\n];\nreturn cases.map((c) => ({ json: c }));"
+      },
+      "id": "seed-code-cases",
+      "name": "Code - 11 Casos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'text-embedding-3-small', input: $json.cenario + ' ' + $json.objetivoCliente + ' ' + $json.duvida }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "seed-http-embed",
+      "name": "HTTP - Embed Caso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -352,
+        400
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "RbzAA9Aidcr8C5pC",
+          "name": "OpenAI account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 6,
+      "waitBetweenTries": 10000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const original = $('Code - 11 Casos').item.json;\nconst embedding = $json.data[0].embedding;\nreturn { json: { ...original, embedding, source: 'manual' } };"
+      },
+      "id": "seed-code-build-body",
+      "name": "Code - Build Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hackaton-op.onrender.com/api/use-cases",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "78f815a7db53acbe8e5148c80181f88d298d75eed27370832ba3a2fd95ad974d"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "seed-http-save",
+      "name": "HTTP - Salvar Caso de Uso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        96,
+        400
+      ],
+      "retryOnFail": true,
+      "maxTries": 6,
+      "waitBetweenTries": 10000
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code - 11 Casos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - 11 Casos": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Embed Caso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Embed Caso": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Body": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Salvar Caso de Uso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "333f7fdede98953d71017ef2e0ac27e5543ae79f7724abd686718654a6707bfd"
+  }
+}
